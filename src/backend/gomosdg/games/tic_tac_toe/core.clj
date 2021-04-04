@@ -38,7 +38,7 @@
    It returns nill when ther is no winner"
   [board]
   (some identity
-        (cond-> []
+        (-> []
           (conj (check-diagonal-winner board :left))
           (conj (check-diagonal-winner board :right))
           (conj (check-column-win board 0))
