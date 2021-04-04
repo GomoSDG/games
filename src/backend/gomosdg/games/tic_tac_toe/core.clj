@@ -9,19 +9,19 @@
   (when (= (count s) 1)
     (first s)))
 
-(defn check-row-win
+(defn check-row-winner
   ([board r]
    (get-only-element
      (set (subvec board (* r 3) (+ (* r 3) 3)))))
   ([board]
-   (check-row-win board 0)))
+   (check-row-winner board 0)))
 
-(defn check-column-win
+(defn check-column-winner
   ([board c]
    (get-only-element
      (set (map #(get board %) [(+ 0 c) (+ 3 c) (+ 6 c)]))))
   ([board]
-   (check-column-win board 0)))
+   (check-column-winner board 0)))
 
 (defn check-diagonal-winner
   [board direction]
