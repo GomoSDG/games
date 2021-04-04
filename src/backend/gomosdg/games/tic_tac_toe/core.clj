@@ -1,4 +1,4 @@
-(ns gomosdg.games.tic-tac-toe)
+(ns gomosdg.games.tic-tac-toe.core)
 
 (def init-board
   [nil nil nil
@@ -47,3 +47,9 @@
           (conj (check-row-win board 0))
           (conj (check-row-win board 1))
           (conj (check-row-win board 2)))))
+
+(defn place-symbol! [board pos s]
+  {:pre  [(<= 0 pos 8)
+          (nil? (get @board pos))]
+   :post [(= (count %) 9)]}
+  (swap! board assoc pos s))

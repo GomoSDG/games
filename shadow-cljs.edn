@@ -1,0 +1,17 @@
+;; shadow-cljs configuration
+{:source-paths
+ ["src/ui"]
+ :deps {:aliases [:ui]}
+
+ :dev-http
+ {8020 "resources/public"}
+
+ :builds
+ {:ui
+  {:target     :browser
+   :output-dir "resources/public/js"
+   :asset-path "/js"
+
+   :modules
+   {:main ; becomes public/js/main.js
+    {:init-fn gomosdg.games.core/init}}}}}
