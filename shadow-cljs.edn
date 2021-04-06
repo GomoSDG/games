@@ -12,4 +12,4 @@
 
    :modules
    {:main ; becomes public/js/main.js
-    {:init-fn gomosdg.games.core/init}}}}}
+    {:init-fn gomosdg.client.core/init}}}}}

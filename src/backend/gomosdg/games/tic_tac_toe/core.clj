@@ -41,15 +41,21 @@
         (-> []
           (conj (check-diagonal-winner board :left))
           (conj (check-diagonal-winner board :right))
-          (conj (check-column-win board 0))
-          (conj (check-column-win board 1))
-          (conj (check-column-win board 2))
-          (conj (check-row-win board 0))
-          (conj (check-row-win board 1))
-          (conj (check-row-win board 2)))))
+          (conj (check-column-winner board 0))
+          (conj (check-column-winner board 1))
+          (conj (check-column-winner board 2))
+          (conj (check-row-winner board 0))
+          (conj (check-row-winner board 1))
+          (conj (check-row-winner board 2)))))
 
 (defn place-symbol! [board pos s]
   {:pre  [(<= 0 pos 8)
           (nil? (get @board pos))]
    :post [(= (count %) 9)]}
   (swap! board assoc pos s))
+
+;; Room contains game state.
+;; Components needed are:
+;; * Comms. -- controlled by http-kit. Make use of transit.
+;; * Rooms. -- Controlled by room-management
+;; * Room management. -- Assigns player to a room and creates one when necessary.
