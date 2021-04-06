@@ -50,9 +50,9 @@
 
 (defn place-symbol! [board pos s]
   {:pre  [(<= 0 pos 8)
-          (nil? (get @board pos))]
+          (nil? (get board pos))]
    :post [(= (count %) 9)]}
-  (swap! board assoc pos s))
+  (assoc board pos s))
 
 ;; Room contains game state.
 ;; Components needed are:
