@@ -4,7 +4,7 @@
             [ring.middleware.json :refer [wrap-json-params]]
             [clojure.data.json :refer [read-json write-str]]
             [gomosdg.games.tic-tac-toe.core :as ttt]
-            [clojure.core.async :refer [<!! timeout]]
+            [clojure.core.async :refer [<!! timeout go-loop chan put! <!]]
             (compojure [core :refer [defroutes GET POST]])))
 
 (def lobby (atom clojure.lang.PersistentQueue/EMPTY))
@@ -33,17 +33,28 @@
     (server/send! (:channel nxt-player) (write-str m))
     (assoc nxt-state :turns nxt-turn)))
 
-(def gs (atom {:board   ttt/init-board
-               :players {}}))
+(defn create-room [game-chan game-state]
+  (go-loop []
+    (info "Waiting for message.")
+    (let [msge (<! game-chan)]
+      (info "Received message: " msge)
+      (swap! game-state process-message msge)
+      (info "Processed message. New game-state: " @game-state))
+    (recur)))
 
 (defn start-room [p1-chan p2-chan]
   (info "starting room with 2 players")
-  (let []
-    (onboard-player gs p1-chan :x)
-    (onboard-player gs p2-chan :o)
-    (swap! gs update :turns set-turns)
-    (server/on-receive p1-chan #(swap! gs process-message (read-json %)))
-    (server/on-receive p2-chan #(swap! gs process-message (read-json %)))))
+  (let [game-chan  (chan)
+        game-state (atom {:board   ttt/init-board
+                          :players {}})]
+    (onboard-player game-state p1-chan :x)
+    (onboard-player game-state p2-chan :o)
+    (swap! game-state update :turns set-turns)
+    ;; (server/on-receive p1-chan #(swap! gs process-message (read-json %)))
+    ;; (server/on-receive p2-chan #(swap! gs process-message (read-json %)))
+    (server/on-receive p1-chan #(put! game-chan (read-json %)))
+    (server/on-receive p2-chan #(put! game-chan (read-json %)))
+    (create-room game-chan game-state)))
 
 (defn establish-rooms [players]
   (loop [l players]
