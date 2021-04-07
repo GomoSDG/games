@@ -50,6 +50,7 @@
 
 (defn place-symbol! [board pos s]
   {:pre  [(<= 0 pos 8)
+          (#{:x :o} s)
           (nil? (get board pos))]
    :post [(= (count %) 9)]}
   (assoc board pos s))
