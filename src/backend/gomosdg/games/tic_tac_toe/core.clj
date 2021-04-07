@@ -37,6 +37,8 @@
   "Returns the tic tac toe winner given a board.
    It returns nill when ther is no winner"
   [board]
+  {:post [(#{:x :o nil} %)]}
+
   (some identity
         (-> []
           (conj (check-diagonal-winner board :left))
