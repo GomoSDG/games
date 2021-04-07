@@ -39,6 +39,8 @@
     (let [msge (<! game-chan)]
       (info "Received message: " msge)
       (swap! game-state process-message msge)
+      (when-let [winner (ttt/get-winner (:board @game-state))]
+          (info "The game has been won by player: " winner))
       (info "Processed message. New game-state: " @game-state))
     (recur)))
 
