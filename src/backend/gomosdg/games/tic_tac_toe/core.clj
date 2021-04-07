@@ -55,10 +55,5 @@
           (#{:x :o} s)
           (nil? (get board pos))]
    :post [(= (count %) 9)]}
-  (assoc board pos s))
 
-;; Room contains game state.
-;; Components needed are:
-;; * Comms. -- controlled by http-kit. Make use of transit.
-;; * Rooms. -- Controlled by room-management
-;; * Room management. -- Assigns player to a room and creates one when necessary.
+  (assoc board pos s))
