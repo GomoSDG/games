@@ -40,15 +40,42 @@
     (server/send! (:channel nxt-player) (write-str (assoc m :symbol (:symbol cur-player))))
     (assoc nxt-state :turns nxt-turn)))
 
+(defmulti handle-game-exception
+  (fn [ex game-state msge]
+    (-> (ex-data ex)
+        :type)))
+
+(defmethod handle-game-exception :not-players-turn-exception
+  [_ game-state msge]
+  (let [sender-id (:id msge)
+        sender-chan (get-in game-state [:players sender-id :channel])]
+    (server/send! sender-chan (write-str {:type    :error
+                                          :message "Not your turn yet."}))))
+
+(defn announce-winner [game-state winner]
+  (let [chans (map :channel (:players game-state))]
+    (doseq [c chans]
+      (server/send! c (write-str {:type :game-end
+                                  :winner winner})))))
+
 (defn start-room [game-chan game-state]
   (go-loop []
     (info "Waiting for message.")
     (let [msge (<! game-chan)]
       (info "Received message: " msge)
-      (swap! game-state process-message msge)
-      (when-let [winner (ttt/get-winner (:board @game-state))]
-          (info "The game has been won by player: " winner))
-      (info "Processed message. New game-state: " @game-state))
+      (try
+
+        ;; process message
+        (swap! game-state process-message msge)
+        (info "Processed message. New game-state: " @game-state)
+
+        ;; check for winner
+        (when-let [winner (ttt/get-winner (:board @game-state))]
+          (info "The game has been won by player: " winner)
+          (announce-winner @game-state winner))
+
+        (catch clojure.lang.ExceptionInfo e
+          (handle-game-exception e @game-state msge))))
     (recur)))
 
 (defn create-room [p1-chan p2-chan]
