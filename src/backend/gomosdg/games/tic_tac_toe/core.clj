@@ -1,9 +1,9 @@
 (ns gomosdg.games.tic-tac-toe.core)
 
 (def init-board
-  [nil nil nil
-   nil nil nil
-   nil nil nil])
+  [:- :- :-
+   :- :- :-
+   :- :- :-])
 
 (defn get-only-element [s]
   (when (= (count s) 1)
@@ -37,9 +37,9 @@
   "Returns the tic tac toe winner given a board.
    It returns nill when ther is no winner"
   [board]
-  {:post [(#{:x :o nil} %)]}
+  {:post [(contains? #{:x :o nil} %)]}
 
-  (some identity
+  (some #{:x :o}
         (-> []
           (conj (check-diagonal-winner board :left))
           (conj (check-diagonal-winner board :right))
