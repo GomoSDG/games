@@ -45,6 +45,14 @@
     (-> (ex-data ex)
         :type)))
 
+(defmethod handle-game-exception :invalid-position
+  [ex game-state msge]
+  (info "Game State: " game-state)
+  (let [sender-id   (:id msge)
+        sender-chan (get-in game-state [:players sender-id :channel])]
+    (server/send! sender-chan (write-str {:type    :error
+                                          :message (.getMessage ex)}))))
+
 (defmethod handle-game-exception :not-players-turn-exception
   [_ game-state msge]
   (let [sender-id (:id msge)

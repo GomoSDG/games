@@ -51,9 +51,18 @@
           (conj (check-row-winner board 2)))))
 
 (defn place-symbol! [board pos s]
-  {:pre  [(<= 0 pos 8)
-          (#{:x :o} s)
-          (nil? (get board pos))]
-   :post [(= (count %) 9)]}
+  {:post [(= (count %) 9)]}
+
+  (when-not (<= 0 pos 8)
+    (throw (ex-info "Position out of bounds."
+                    {:type :invalid-position})))
+
+  (when-not (#{:x :o} s)
+    (throw (ex-info "Invalid symbol."
+                    {:type :invalid-symbol})))
+
+  (when-not (= :- (get board pos))
+    (throw (ex-info "Cannot place symbol on another symbol."
+                    {:type :invalid-position})))
 
   (assoc board pos s))
