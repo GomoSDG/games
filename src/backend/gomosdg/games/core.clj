@@ -11,8 +11,8 @@
     (if (server/websocket? channel)
       (do
         (info "Adding user to lobby")
-        (swap! lobby conj channel) ;; add user to lobby
-        (swap! lobby establish-rooms))
+        (swap! ttt/lobby conj channel) ;; add user to lobby
+        (swap! ttt/lobby ttt/establish-rooms))
 
       (server/send! channel {:status  200
                              :headers {"Content-Type" "text/plain"}
@@ -22,9 +22,11 @@
   (GET "/tic-tac-toe" []
        #'async-handler))
 
+(def server (server/run-server (-> #'games
+                                   (wrap-json-params :keywords? true)) {:port 8080}))
+
 (comment
-  (def server (server/run-server (-> #'games
-                                     (wrap-json-params :keywords? true)) {:port 8080}))
+  
 
   (def i (atom 0))
 
