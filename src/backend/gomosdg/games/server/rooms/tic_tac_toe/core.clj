@@ -89,7 +89,11 @@
     (onboard-player game-state p2-chan :o)
 
     ;; Set turns
-    (swap! game-state update :turns set-turns)
+    (swap! game-state set-turns)
+    (info "First player is: "
+          (-> @game-state :turns first :id)
+          " -- "
+          (-> @game-state :turns first :symbol))
 
     ;; Setup communications
     (server/on-receive p1-chan #(put! game-chan (read-json %)))
