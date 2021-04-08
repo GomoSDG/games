@@ -61,7 +61,7 @@
                                           :message "Not your turn yet."}))))
 
 (defn announce-winner [game-state winner]
-  (let [chans (map :channel (:players game-state))]
+  (let [chans (map :channel (vals (:players game-state)))]
     (doseq [c chans]
       (server/send! c (write-str {:type :game-end
                                   :winner winner})))))
