@@ -18,7 +18,7 @@
     (info "Message sent to player!")))
 
 (defn set-turns [gs]
-  (keys (:players gs)))
+  (assoc gs :turns (vals (:players gs))))
 
 (defmulti process-message (fn [_ m] (:type m)))
 
