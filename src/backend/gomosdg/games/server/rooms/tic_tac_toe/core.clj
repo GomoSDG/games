@@ -104,8 +104,10 @@
           (-> @game-state :turns first :symbol))
 
     ;; Setup communications
-    (server/on-receive p1-chan #(put! game-chan (read-json %)))
-    (server/on-receive p2-chan #(put! game-chan (read-json %)))
+    (server/on-receive p1-chan #(put! game-chan {:message (read-json %)
+                                                 :channel p1-chan}))
+    (server/on-receive p2-chan #(put! game-chan {:message (read-json %)
+                                                 :channel p2-chan}))
 
     ;; Start room
     (start-room game-chan game-state)))
