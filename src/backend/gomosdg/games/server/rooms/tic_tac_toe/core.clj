@@ -20,24 +20,23 @@
 (defn set-turns [gs]
   (assoc gs :turns (vals (:players gs))))
 
-(defmulti process-message (fn [_ m] (:type m)))
+(defmulti process-message (fn [_ {:keys [command]}] (:type command)))
 
 (defmethod process-message "place-symbol"
-  [{:keys [turns] :as game-state} {:keys [id pos] :as m}]
+  [game-state {:keys [command]}]
 
-  ;; Make sure it's is the player's turn.
-  (when-not (= id (-> (first turns)
-                      :id))
-    (throw (ex-info "Not the player's turn"
-                    {:type :not-players-turn-exception})))
+  (let [cur-player (first (:turns command))
+        nxt-player (second (:turns command))
+        nxt-turn   (reverse (:turns command))
+        nxt-state  (update game-state :board ttt/place-symbol! (:pos command) (:symbol cur-player))]
+    ;; Make sure it's is the player's turn.
+    (when-not (= (:id command) (:id cur-player))
+      (throw (ex-info "Not the player's turn"
+                      {:type :not-players-turn-exception})))
 
-  ;; handle place symbol message.
-  (let [cur-player (first turns)
-        nxt-player (second turns)
-        nxt-turn   (reverse turns)
-        nxt-state  (update game-state :board ttt/place-symbol! pos (:symbol cur-player))]
+    ;; handle place symbol message.
     (server/send! (:channel cur-player) (write-str {:type :ack}))
-    (server/send! (:channel nxt-player) (write-str (assoc m :symbol (:symbol cur-player))))
+    (server/send! (:channel nxt-player) (write-str (assoc command :symbol (:symbol cur-player))))
     (assoc nxt-state :turns nxt-turn)))
 
 (defmulti handle-game-exception
@@ -55,7 +54,7 @@
 
 (defmethod handle-game-exception :not-players-turn-exception
   [_ game-state msge]
-  (let [sender-id (:id msge)
+  (let [sender-id   (:id msge)
         sender-chan (get-in game-state [:players sender-id :channel])]
     (server/send! sender-chan (write-str {:type    :error
                                           :message "Not your turn yet."}))))
@@ -90,7 +89,7 @@
   (info "starting room with 2 players")
   (let [game-chan  (chan)
         game-state (atom {:board   ttt/init-board
-                          :players {}})]
+                          :players (sorted-map)})]
 
     ;; Onboard players
     (onboard-player game-state p1-chan :x)
@@ -104,9 +103,9 @@
           (-> @game-state :turns first :symbol))
 
     ;; Setup communications
-    (server/on-receive p1-chan #(put! game-chan {:message (read-json %)
+    (server/on-receive p1-chan #(put! game-chan {:command (read-json %)
                                                  :channel p1-chan}))
-    (server/on-receive p2-chan #(put! game-chan {:message (read-json %)
+    (server/on-receive p2-chan #(put! game-chan {:command (read-json %)
                                                  :channel p2-chan}))
 
     ;; Start room
