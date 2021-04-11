@@ -13,7 +13,7 @@
                      :channel p-ch
                      :symbol  sym}]
     (swap! game-state update :players assoc (:id player-info) player-info)
-    (<!! (timeout 2500))
+    (<!! (timeout 2500)) ;; just to help me to listen to messages in time on JS side. Will get rid of when done.
     (server/send! p-ch (write-str (dissoc player-info :channel)))
     (info "Message sent to player!")))
 
