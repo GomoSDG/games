@@ -1,4 +1,4 @@
-(ns gomosdg.games.tic-tac-toe.core)
+(ns gomosdg.games.tic-tac-toe.domain.core)
 
 (def init-board
   [:- :- :-

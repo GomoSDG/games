@@ -1,8 +1,10 @@
 (ns gomosdg.games.server.rooms.tic-tac-toe.core
   (:require [org.httpkit.server :as server]
-            [clojure.tools.logging :refer [info]]
             [clojure.data.json :refer [read-json write-str]]
-            [gomosdg.games.tic-tac-toe.core :as ttt]
+            [gomosdg.games.tic-tac-toe.domain.core :as ttt]
+            [gomosdg.games.rooms.messages.core :as m]
+            [hiccup.core :as h]
+            [gomosdg.games.views.core :as views]
             [clojure.core.async :refer [<!! timeout go-loop chan put! <!]]))
 
 
@@ -13,21 +15,27 @@
                      :channel p-ch
                      :symbol  sym}]
     (swap! game-state update :players assoc (:id player-info) player-info)
-    (<!! (timeout 2500)) ;; just to help me to listen to messages in time on JS side. Will get rid of when done.
+
     (server/send! p-ch (write-str (dissoc player-info :channel)))
-    (info "Message sent to player!")))
+    (println "Message sent to player!")))
 
 (defn set-turns [gs]
   (assoc gs :turns (vals (:players gs))))
 
 (defmulti process-message (fn [_ {:keys [command]}] (:type command)))
 
+(defn board->stream [board]
+  (h/html
+    [:turbo-stream {:action "update"
+                    :target     "game-board"}
+     [:template
+      (views/game-board board)]]))
+
 (defmethod process-message "place-symbol"
   [game-state {:keys [command]}]
-
-  (let [cur-player (first (:turns command))
-        nxt-player (second (:turns command))
-        nxt-turn   (reverse (:turns command))
+  (let [cur-player (first (:turns game-state))
+        nxt-player (second (:turns game-state))
+        nxt-turn   (reverse (:turns game-state))
         nxt-state  (update game-state :board ttt/place-symbol! (:pos command) (:symbol cur-player))]
     ;; Make sure it's is the player's turn.
     (when-not (= (:id command) (:id cur-player))
@@ -35,8 +43,8 @@
                       {:type :not-players-turn-exception})))
 
     ;; handle place symbol message.
-    (server/send! (:channel cur-player) (write-str {:type :ack}))
-    (server/send! (:channel nxt-player) (write-str (assoc command :symbol (:symbol cur-player))))
+    (server/send! (:channel cur-player) (board->stream (:board nxt-state)))
+    (server/send! (:channel nxt-player) (board->stream (:board nxt-state)))
     (assoc nxt-state :turns nxt-turn)))
 
 (defmulti handle-game-exception
@@ -46,39 +54,45 @@
 
 (defmethod handle-game-exception :invalid-position
   [ex game-state msge]
-  (info "Game State: " game-state)
-  (let [sender-id   (:id msge)
-        sender-chan (get-in game-state [:players sender-id :channel])]
-    (server/send! sender-chan (write-str {:type    :error
-                                          :message (.getMessage ex)}))))
+  (println "Game State: " game-state)
+  (server/send! (:channel msge)
+                (m/render-html {:action "append"
+                                  :type   :danger
+                                  :body   "You cannot place symbol there."})))
 
 (defmethod handle-game-exception :not-players-turn-exception
   [_ game-state msge]
-  (let [sender-id   (:id msge)
-        sender-chan (get-in game-state [:players sender-id :channel])]
-    (server/send! sender-chan (write-str {:type    :error
-                                          :message "Not your turn yet."}))))
+  (server/send! (:channel msge) (h/html [:turbo-stream {:action "append"
+                                                        :target "messages"}
+                                         [:template
+                                          [:span#message-box.has-text-danger
+                                           {:data-controller "message-box"}
+                                           "It is not currently your turn"]]])))
 
 (defn announce-winner [game-state winner]
   (let [chans (map :channel (vals (:players game-state)))]
     (doseq [c chans]
-      (server/send! c (write-str {:type :game-end
-                                  :winner winner})))))
+      (server/send! c (h/html [:turbo-stream {:target "messages"
+                                              :action "append"}
+                               [:template
+                                [:span#message-box.has-text-info
+                                 {:data-controller "message-box"}
+                                 "The game has been won by player: " winner]]])))))
 
 (defn start-room [game-chan game-state]
   (go-loop []
-    (info "Waiting for message.")
+    (println "Waiting for message.")
     (let [msge (<! game-chan)]
-      (info "Received message: " msge)
+      (println "Received message: " msge)
       (try
 
         ;; process message
         (swap! game-state process-message msge)
-        (info "Processed message. New game-state: " @game-state)
+        (println "Processed message. New game-state: " @game-state)
 
         ;; check for winner
         (when-let [winner (ttt/get-winner (:board @game-state))]
-          (info "The game has been won by player: " winner)
+          (println "The game has been won by player: " winner)
           (announce-winner @game-state winner))
 
         (catch clojure.lang.ExceptionInfo e
@@ -86,7 +100,7 @@
     (recur)))
 
 (defn create-room [p1-chan p2-chan]
-  (info "starting room with 2 players")
+  (println "starting room with 2 players")
   (let [game-chan  (chan)
         game-state (atom {:board   ttt/init-board
                           :players (sorted-map)})]
@@ -97,14 +111,16 @@
 
     ;; Set turns
     (swap! game-state set-turns)
-    (info "First player is: "
+    (println "First player is: "
           (-> @game-state :turns first :id)
           " -- "
           (-> @game-state :turns first :symbol))
 
     ;; Setup communications
-    (server/on-receive p1-chan #(put! game-chan {:command (read-json %)
-                                                 :channel p1-chan}))
+    (server/on-receive p1-chan #(put! game-chan (do
+                                                  (println "The command: " %)
+                                                  {:command (read-json %)
+                                                 :channel p1-chan})))
     (server/on-receive p2-chan #(put! game-chan {:command (read-json %)
                                                  :channel p2-chan}))
 
@@ -118,4 +134,4 @@
 
       (do ;; start-rooms for users with partners
         (apply create-room (seq (take 2 players)))
-        (recur (nnext l))))))
+        (recur (drop 2 l))))))
