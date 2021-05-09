@@ -2,7 +2,6 @@
 
 (defn ttt-cell [i val]
   [:button.title.is-3 {:data-pos    i
-                       :style "height: 15vh;width: 15vw;"
                        :data-action "click->tic-tac-toe#placeSymbol"}
    val])
 
@@ -29,8 +28,16 @@
                      val]]])
                 board-vals)])
 
+(defn game-board-3 [board-vals]
+  [:div.columns.is-centered.is-multiline.is-mobile {:id "game-board"}
+   (map-indexed (fn [i val]
+                  [:div.column.is-one-third.has-text-centered.p-1
+                   {:style "border-style: solid;"}
+                   (ttt-cell i val)])
+                board-vals)])
+
 (defn tic-tac-toe []
-  (let [board (repeat 9 " -- ")]
+  (let [board (repeat 9 " - ")]
     [:turbo-frame {:id              "tic-tac-toe"
                    :data-controller "tic-tac-toe"}
      [:section.section
@@ -40,9 +47,10 @@
         [:h1.subtitle "The Game Is On!"]]]
       [:div
        [:div.has-text-centered.block
-        [:div#messages
-         ]]
-       (game-board board)]]]))
+        [:div#messages]]
+       [:div.columns.is-centered
+        [:div.column.is-3-widescreem.is-5-desktop
+         (game-board-3 board)]]]]]))
 
 (comment
   (tic-tac-toe))

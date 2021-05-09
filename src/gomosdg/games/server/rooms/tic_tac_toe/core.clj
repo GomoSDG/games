@@ -26,10 +26,10 @@
 
 (defn board->stream [board]
   (h/html
-    [:turbo-stream {:action "update"
-                    :target     "game-board"}
+    [:turbo-stream {:action "replace"
+                    :target "game-board"}
      [:template
-      (views/game-board board)]]))
+      (views/game-board-3 board)]]))
 
 (defmethod process-message "place-symbol"
   [game-state {:keys [command]}]
