@@ -1,5 +1,6 @@
 (ns gomosdg.auth.core
   (:require [buddy.auth :refer [authenticated? throw-unauthorized]]
+            [ring.util.response :as response]
             [buddy.auth.backends.session :refer [session-backend]]
             [medley.core :as m]
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]))
@@ -35,7 +36,19 @@
 
 (comment (valid-registration-form? {:password "Hello" :password-repeat "Hello1" :something false}))
 
-
+(defn unauthorized-handler
+  [request metadata]
+  (cond
+    ;; If request is authenticated, raise 403 instead
+    ;; of 401 (because user is authenticated but permission
+    ;; denied is raised).
+    (authenticated? request)
+    (-> {:body "Sorry! Not allowed"}
+        (assoc :status 403))
+    ;; In other cases, redirect the user to login page.
+    :else
+    (let [current-url (:uri request)]
+      (response/redirect (format "/login?next=%s" current-url) :see-other))))
 
 (def auth-backend
-  (session-backend))
+  (session-backend {:unauthorized-handler unauthorized-handler}))

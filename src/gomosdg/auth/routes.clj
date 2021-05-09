@@ -46,8 +46,9 @@
         password       (get-in request [:params :password])
         session        (:session request)
         found-password (get-in @gomosdg.auth.core/users [username :password])]
+
     (if (and found-password (= found-password password))
-      (let [next-url        (get-in request [:query-params :next] "/")
+      (let [next-url        (get-in request [:params :next-url] "/")
             updated-session (assoc session :identity (keyword username))]
         (println "Matching password!")
         (-> (response/redirect next-url :see-other)

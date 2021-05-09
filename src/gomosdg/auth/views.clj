@@ -10,8 +10,7 @@
       [:h1.subtitle "You will need to login in order to use some of our applications."]]
      [:section.columns.is-centered
       [:div.column.is-5-tablet.is-4-desktop.is-3-widescreen
-       (forms/render-form {:action "/login"
-                           :method "post"}
+       (forms/render-form {:method "post"}
                           [{:name        "username"
                             :control     :input
                             :type        :text

@@ -3,16 +3,18 @@
             [gomosdg.games.views.core :as views]
             [gomosdg.games.server.rooms.tic-tac-toe.core :as ttt]
             [gomosdg.views.layout :as layouts]
-            [ring.util.response :as ring]
-            [aleph.http :as http]
             [manifold.bus :as bus]
-            [manifold.deferred :as d]
-            (compojure [core :refer [defroutes GET context]]
-                       [route :as route])))
+            [buddy.auth :refer [authenticated? throw-unauthorized]]
+            [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
+            (compojure [core :refer [defroutes GET]])))
 
 (def game-rooms (bus/event-bus))
 
 (defn tic-tac-toe [req]
+  ;; First check if the user is authenticated.
+  (when-not (authenticated? req)
+    (throw-unauthorized))
+
   (server/with-channel req channel
     (println "Connection established!")
     (if (server/websocket? channel)
@@ -25,12 +27,13 @@
         channel
         (layouts/main "SDG - Tic Tac Toe" (views/tic-tac-toe))))))
 
-(comment
-  @(tic-tac-toe nil))
-
-(defroutes routes
+(defroutes routes*
   (GET "/tic-tac-toe" []
        tic-tac-toe))
+
+(def routes (-> routes*
+                (wrap-authentication gomosdg.auth.core/auth-backend)
+                (wrap-authorization gomosdg.auth.core/auth-backend)))
 
 (comment
   (server)
