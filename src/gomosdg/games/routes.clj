@@ -34,4 +34,3 @@
 (def routes (-> routes*
                 (wrap-authentication gomosdg.auth.core/auth-backend)
                 (wrap-authorization gomosdg.auth.core/auth-backend)))
-
