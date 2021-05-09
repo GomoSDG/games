@@ -1,5 +1,7 @@
 (ns gomosdg.games.rooms.core)
 
+(def rooms [])
+
 (defprotocol Room
   "A room abstracts away all messaging concepts from the game."
   (add-user [this user]
@@ -12,7 +14,9 @@
     "Handles ")
   (broadcast! [this message]
     "Broadcasts message to all members of the room.")
-  (send! [this ]))
+  (contains-user? [this user]
+    "Checks if the user is in the room.")
+  (send! [this]))
 
 
 
