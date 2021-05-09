@@ -35,9 +35,3 @@
                 (wrap-authentication gomosdg.auth.core/auth-backend)
                 (wrap-authorization gomosdg.auth.core/auth-backend)))
 
-(comment
-  (server)
-  @(http/get "http://localhost:3080/games/tic-tac-toe")
-  @(http/websocket-client "ws://localhost:3080/games/tic-tac-toe")
-  )
-
