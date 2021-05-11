@@ -4,6 +4,8 @@
             [gomosdg.games.tic-tac-toe.domain.core :as ttt]
             [gomosdg.games.rooms.messages.core :as m]
             [hiccup.core :as h]
+            [gomosdg.games.rooms.core :as r]
+            [gomosdg.games.tic-tac-toe.core :as c.ttt]
             [gomosdg.games.views.core :as views]
             [clojure.core.async :refer [<!! timeout go-loop chan put! <!]]))
 
@@ -36,7 +38,7 @@
   (let [cur-player (first (:turns game-state))
         nxt-player (second (:turns game-state))
         nxt-turn   (reverse (:turns game-state))
-        nxt-state  (update game-state :board ttt/place-symbol! (:pos command) (:symbol cur-player))]
+        nxt-state  (update game-state :board ttt/place-symbol (:pos command) (:symbol cur-player))]
     ;; Make sure it's is the player's turn.
     (when-not (= (:id command) (:id cur-player))
       (throw (ex-info "Not the player's turn"
@@ -128,10 +130,22 @@
     (start-room game-chan game-state)))
 
 (defn establish-rooms [players]
-  (loop [l players]
-    (if-not (>= (count l) 2)
-      l ;; give back the new uneven list
+  (let [room (c.ttt/create-room)
+        players (loop [l players]
+                  (if-not (>= (count l) 2)
+                    l ;; give back the new uneven list
 
-      (do ;; start-rooms for users with partners
-        (apply create-room (seq (take 2 players)))
-        (recur (drop 2 l))))))
+
+
+                    (do ;; start-rooms for users with partners
+                      (for [p (take 2 l)]
+                        (do
+                          (println "Added to: " (r/add-user! room {:username (java.util.UUID/randomUUID)
+                                                                   :chan     p}))
+                          (println "Players: " (r/list-players room))))
+                      (r/start! room)
+
+                      (println (r/list-players room))
+
+                      (recur (drop 2 l)))))]
+    players))

@@ -50,7 +50,7 @@
           (conj (check-row-winner board 1))
           (conj (check-row-winner board 2)))))
 
-(defn place-symbol! [board pos s]
+(defn place-symbol [board pos s]
   {:post [(= (count %) 9)]}
 
   (when-not (<= 0 pos 8)

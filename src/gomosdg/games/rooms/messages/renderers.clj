@@ -6,7 +6,7 @@
   (case type
     :warning "is-warning"
     :info    "is-info"
-    :daner   "is-danger"
+    :danger   "is-danger"
     :default "is-info"))
 
 (defrecord HTMLRenderer []

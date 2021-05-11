@@ -51,6 +51,3 @@
        [:div.columns.is-centered
         [:div.column.is-3-widescreem.is-5-desktop
          (game-board-3 board)]]]]]))
-
-(comment
-  (tic-tac-toe))
