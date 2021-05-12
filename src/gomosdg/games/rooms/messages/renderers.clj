@@ -17,5 +17,6 @@
         [:turbo-stream {:action (name action)
                         :target "messages"}
          [:template
-          [:div.notification {:class (type->message-class type)}
+          [:div.notification {:class (type->message-class type)
+                              :data-controller "message-box"}
            body]]]))))

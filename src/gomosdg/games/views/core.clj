@@ -36,18 +36,20 @@
                    (ttt-cell i val)])
                 board-vals)])
 
-(defn tic-tac-toe []
-  (let [board (repeat 9 " - ")]
-    [:turbo-frame {:id              "tic-tac-toe"
-                   :data-controller "tic-tac-toe"}
-     [:section.section
-      [:section.hero
-       [:div.hero-body
-        [:h1.title "Tic Tac Toe"]
-        [:h1.subtitle "The Game Is On!"]]]
-      [:div
-       [:div.has-text-centered.block
-        [:div#messages]]
-       [:div.columns.is-centered
-        [:div.column.is-3-widescreem.is-5-desktop
-         (game-board-3 board)]]]]]))
+(defn tic-tac-toe
+  ([] (tic-tac-toe (repeat 9 " - ")))
+
+  ([board]
+   [:turbo-frame {:id              "tic-tac-toe"
+                  :data-controller "tic-tac-toe"}
+    [:section.section
+     [:section.hero
+      [:div.hero-body
+       [:h1.title "Tic Tac Toe"]
+       [:h1.subtitle "The Game Is On!"]]]
+     [:div
+      [:div.has-text-centered.block
+       [:div#messages]]
+      [:div.columns.is-centered
+       [:div.column.is-3-widescreem.is-5-desktop
+        (game-board-3 board)]]]]]))

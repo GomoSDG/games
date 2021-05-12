@@ -3,6 +3,7 @@
             [gomosdg.auth.views :as v]
             [gomosdg.auth.core :refer [has-matching-passwords? get-errors valid-registration-form?]]
             [ring.util.response :as response]
+            [gomosdg.games.tic-tac-toe.core]
             [gomosdg.views.layout :as layouts]))
 
 ;;; ---- Controllers ------ ;;;
