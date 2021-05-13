@@ -5,6 +5,7 @@
             [gomosdg.views.layout :as layouts]
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.util.response :as response]
             (compojure [core :refer [defroutes GET context ANY]]
                        [route :as route])))
 
@@ -14,7 +15,7 @@
   (context "/games" []
     games/routes)
   (GET "/" []
-       (layouts/main "SDG"))
+       (response/redirect "/games/rooms" :see-other))
   auth/routes
   (route/resources "/"))
 
