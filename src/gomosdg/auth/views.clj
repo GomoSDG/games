@@ -40,7 +40,8 @@
      [:section.columns.is-centered
       [:div.column.is-5-tablet.is-4-desktop.is-3-widescreen
        (forms/render-form {:action "/register"
-                           :method "post"}
+                           :method "post"
+                           :data-turbo "false"}
 
                           [{:name        :full-name
                             :control     :input
