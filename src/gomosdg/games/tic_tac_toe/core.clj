@@ -94,7 +94,7 @@
         (game-board-3 @board)
         (r/options-panel-for room username)]]]]]))
 
-(defrecord TicTacToeRoom [room-id name board users players bus turns invited])
+(defrecord TicTacToeRoom [room-id name board users players bus turns invited started?])
 
 (defn pick-random-players [users]
   (let [x-player (rand-nth users)
@@ -135,7 +135,8 @@
     (loop [streams (bus/downstream bus :room)]
       (when-let [s (first streams)]
         (s/close! s)
-        (recur (rest streams))))))
+        (recur (rest streams)))))
+  (reset! (:started? room) false))
 
 (extend-type TicTacToeRoom
   Room
@@ -162,17 +163,19 @@
     (bus/publish! (:bus room) username message))
 
   (start! [room]
-    (reset! (:players room) (pick-random-players (vals @(:users room))))
-    (reset! (:board room) d.ttt/init-board)
-    (reset! (:turns room) [:x :o])
+    (when-not (:started? room)
+      (reset! (:players room) (pick-random-players (vals @(:users room))))
+      (reset! (:board room) d.ttt/init-board)
+      (reset! (:turns room) [:x :o])
+      (reset! (:started? room) true)
 
-    (r/broadcast! room (m/render-html {:action "append"
-                                       :type   :info
-                                       :body   (str "The first player is: " (name (get-player-by-symbol room :x)))}))
+      (r/broadcast! room (m/render-html {:action "append"
+                                         :type   :info
+                                         :body   (str "The first player is: " (name (get-player-by-symbol room :x)))}))
 
-    (r/broadcast! room (board->stream @(:board room)))
+      (r/broadcast! room (board->stream @(:board room)))
 
-    (s/consume (partial game-loop room) (bus/subscribe (:bus room) :room)))
+      (s/consume (partial game-loop room) (bus/subscribe (:bus room) :room))))
 
   (stop! [room]
     (stop-game room))
@@ -238,4 +241,5 @@
                   (atom {})
                   (bus/event-bus)
                   (atom [:x :o])
-                  (atom invited)))
+                  (atom invited)
+                  (atom false)))
