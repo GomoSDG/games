@@ -11,7 +11,7 @@
 
 (defn -main [& args]
   (loop [rng (range 5)]
-    (when-let [n (first (rng))]
+    (when-let [n (first rng)]
       (let [room (r/create-room {:name (str "My Cool Room " n)
                                  :invited #{"Gomotso" "Stha"}
                                  :game :tic-tac-toe})]
