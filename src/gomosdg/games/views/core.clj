@@ -1,8 +1,8 @@
 (ns gomosdg.games.views.core)
 
 (defn ttt-cell [i val]
-  [:button.title.is-3 {:data-pos    i
-                       :data-action "click->tic-tac-toe#placeSymbol"}
+  [:button.title.is-overlay.button {:data-pos    i
+                                    :data-action "click->tic-tac-toe#placeSymbol"}
    val])
 
 (defn game-board [board-vals]

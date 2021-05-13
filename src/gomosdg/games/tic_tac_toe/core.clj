@@ -10,13 +10,6 @@
             [gomosdg.views.forms :as forms]
             [gomosdg.games.views.core :as views]))
 
-(defn board->stream [board]
-  (h/html
-    [:turbo-stream {:action "replace"
-                    :target "game-board"}
-     [:template
-      (views/game-board-3 board)]]))
-
 (defmulti handle-game-exception
   (fn [ex game-state msge room]
     (-> (ex-data ex)
@@ -62,17 +55,24 @@
     (d.ttt/place-symbol board (:pos command) turn)))
 
 (defn ttt-cell [i val]
-  [:button.title.is-3 {:data-pos    i
-                       :data-action "click->tic-tac-toe#placeSymbol"}
+  [:button.title.button.is-light {:data-pos    i
+                                  :data-action "click->tic-tac-toe#placeSymbol"}
    val])
 
 (defn game-board-3 [board-vals]
   [:div.columns.is-centered.is-multiline.is-mobile {:id "game-board"}
    (map-indexed (fn [i val]
                   [:div.column.is-one-third.has-text-centered.p-1
-                   {:style "border-style: solid;"}
+                   {:style "border-style: solid; border-width: 0.5px"}
                    (ttt-cell i val)])
                 board-vals)])
+
+(defn board->stream [board]
+  (h/html
+   [:turbo-stream {:action "replace"
+                   :target "game-board"}
+    [:template
+     (game-board-3 board)]]))
 
 (defn view
   ([] (view (repeat 9 " - ") nil))
@@ -204,7 +204,7 @@
                           {:control :button
                            :type :submit
                            :value "Reset"
-                           :colors [:light :primary]}])]])
+                           :colors [:light :info]}])]])
 
   (get-view [room]
     (view room nil))
