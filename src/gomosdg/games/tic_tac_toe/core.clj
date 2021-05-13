@@ -163,7 +163,9 @@
     (bus/publish! (:bus room) username message))
 
   (start! [room]
-    (when-not (:started? room)
+    (println "Started? " (:started? room))
+    (when-not @(:started? room)
+      (println "Starting game!")
       (reset! (:players room) (pick-random-players (vals @(:users room))))
       (reset! (:board room) d.ttt/init-board)
       (reset! (:turns room) [:x :o])
