@@ -32,7 +32,7 @@
 
   (configure! [this username options])
 
-  (reset! [this])
+  (restart! [this])
 
   (started? [this]
     "States whether game has started or not.")

@@ -58,7 +58,7 @@
 
     (case command
       "start" (r/start! room)
-      "reset" (r/reset! room))))
+      "reset" (r/restart! room))))
 
 (defroutes routes*
   (GET "/rooms" []
@@ -69,13 +69,6 @@
         handle-room-command)
   (GET "/rooms/:room-id/ws" []
        room-ws-handler))
-
-(for [n (range 5)]
-
-  (let [room (r/create-room {:name (str "My Cool Room " n)
-                           :invited #{"Gomotso" "Stha"}
-                           :game :tic-tac-toe})]
-    (swap! r/rooms assoc (:room-id room) room)))
 
 (def routes (-> #'routes*
                 (wrap-authentication auth/auth-backend)
