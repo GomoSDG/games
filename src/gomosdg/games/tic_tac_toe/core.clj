@@ -124,10 +124,18 @@
       (println "The game has been won by player: " winner)
       (r/broadcast! room (m/render-html {:action "append"
                                          :type   :info
-                                         :body   (str "The game has been won by " (get-player-by-symbol room winner))})))
+                                         :body   (str "The game has been won by " (get-player-by-symbol room winner))}))
+      (r/stop! room))
 
     (catch clojure.lang.ExceptionInfo e
       (handle-game-exception e @(:board room) msge room))))
+
+(defn stop-game [room]
+  (let [bus (:bus room)]
+    (loop [streams (bus/downstream bus :room)]
+      (when-let [s (first streams)]
+        (s/close! s)
+        (recur (rest streams))))))
 
 (extend-type TicTacToeRoom
   Room
@@ -154,26 +162,35 @@
     (bus/publish! (:bus room) username message))
 
   (start! [room]
-    (let [stream (bus/subscribe (:bus room) :room)]
-      (reset! (:players room) (pick-random-players (vals @(:users room))))
-      (s/consume (partial game-loop room) stream)))
+    (reset! (:players room) (pick-random-players (vals @(:users room))))
+    (reset! (:board room) d.ttt/init-board)
+    (reset! (:turns room) [:x :o])
+
+    (r/broadcast! room (m/render-html {:action "append"
+                                       :type   :info
+                                       :body   (str "The first player is: " (name (get-player-by-symbol room :x)))}))
+
+    (r/broadcast! room (board->stream @(:board room)))
+
+    (s/consume (partial game-loop room) (bus/subscribe (:bus room) :room)))
 
   (stop! [room]
-    nil)
+    (stop-game room))
 
-  (reset! [room]
-    (let [board (:board room)
-          players (:players room)
-          users (:users room)]
-      (reset! players (pick-random-players (vals @users)))
-      (reset! board d.ttt/init-board)
-      (r/broadcast! room (board->stream @board))))
+  (restart! [room]
+    (r/stop! room)
+    (r/start! room))
 
   (broadcast! [room message]
     (bus/publish! (:bus room) :broadcast message))
 
   (contains-user? [room user]
     (contains? @(:users room) (:username user)))
+
+  (has-access? [room user]
+    (let [invited? @(:invited room)]
+      (boolean (invited? user)))
+    true)
 
   (get-name [room]
     (:name room))
