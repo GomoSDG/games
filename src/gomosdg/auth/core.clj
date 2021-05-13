@@ -48,7 +48,7 @@
     ;; In other cases, redirect the user to login page.
     :else
     (let [current-url (:uri request)]
-      (response/redirect (format "/login?next=%s" current-url) :see-other))))
+      (response/redirect (format "/login?next-url=%s" current-url) :see-other))))
 
 (def auth-backend
   (session-backend {:unauthorized-handler unauthorized-handler}))
