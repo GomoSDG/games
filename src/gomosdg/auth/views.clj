@@ -18,7 +18,7 @@
                             :label       "Username"}
                            {:name        "password"
                             :control     :input
-                            :type        :text
+                            :type        :password
                             :placeholder "Enter your password"
                             :label       "Password"}
                            {:control :button
