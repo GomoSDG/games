@@ -54,6 +54,12 @@
                    :class (colors->class colors)
                    :value value}]])
 
+(defmethod render-control :link
+  [{:keys [href text]}]
+  [:div.field
+   [:a {:href href}
+    text]])
+
 
 (defn render-form [options fields]
   [:form options

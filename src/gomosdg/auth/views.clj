@@ -24,7 +24,10 @@
                            {:control :button
                             :type    :submit
                             :value   "Submit"
-                            :colors  [:primary]}])]]]))
+                            :colors  [:primary]}
+                           {:control :link
+                            :href "/register"
+                            :text "Don't have an account? Sign up now!"}])]]]))
 
 (defn register
   ([] (register {}))
