@@ -7,35 +7,27 @@
             [aleph.http :as http]
             [buddy.auth :refer [authenticated? throw-unauthorized]]
             [gomosdg.games.rooms.core :as r]
+            [gomosdg.games.tic-tac-toe.core]
             [gomosdg.games.rooms.views :as v]
             [buddy.auth.middleware :refer [wrap-authentication wrap-authorization]]
             (compojure [core :refer [defroutes GET POST]])))
 
-(comment
-  (-> (vals @rooms)
-      first
-      :board
-      deref)
-  @rooms
-  (let [room (r/create-room {:name "My Cool Room"
-                             :invited #{"Gomotso" "Stha"}
-                             :game :tic-tac-toe})]
-    (swap! rooms assoc (:room-id room) room))
-  )
-
 ;; TODO: put the handlers together again.
 
 (defn rooms-handler [req]
-  ;; (when-not (authenticated? req)
-  ;;   (throw-unauthorized))
+  (when-not (authenticated? req)
+    (throw-unauthorized))
 
   (let [username (get-in req [:session :identity])
         rooms (r/list-rooms-for username)
-        ;; user-rooms (filter #(r/contains-user? % ) rooms)
-        ]
-    (layouts/main "SDG - Rooms" (v/list-rooms rooms))))
+        user-rooms (filter #(r/has-access? % username) rooms)]
+
+    (layouts/main "SDG - Rooms" (v/list-rooms user-rooms))))
 
 (defn room-ws-handler [req]
+  (when-not (authenticated? req)
+    (throw-unauthorized))
+
   (d/let-flow [room-id (get-in req [:params :room-id])
                username (get-in req [:session :identity])
                room (r/get-room room-id)
@@ -44,12 +36,15 @@
                         (fn [_] nil))]
 
               (if conn
-                (r/add-user! room {:username (.toString (java.util.UUID/randomUUID))
+                (r/add-user! room {:username username
                                    :stream conn})
                 (layouts/main (str "SDG Rooms - " (r/get-name room))
                               (r/get-view room)))))
 
 (defn room-handler [req]
+  (when-not (authenticated? req)
+    (throw-unauthorized))
+
   (let [room-id (get-in req [:params :room-id])
         room (r/get-room room-id)]
 
