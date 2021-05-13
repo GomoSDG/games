@@ -16,4 +16,7 @@
  {:dev
   {:extra-paths ["dev"]
    :extra-deps  {ring/ring-devel {:mvn/version "1.9.2"}}
-   :main-opts   ["-m" "hotreload"]}}}
+   :main-opts   ["-m" "hotreload"]}
+  :nREPL
+  {:extra-deps
+   {nrepl/nrepl {:mvn/version "0.8.3"}}}}}
