@@ -10,12 +10,15 @@
   #'app)
 
 (defn -main [& args]
-  (loop [rng '(0 1 2 3 4)]
+  (loop [rng (range 10)]
+    (println "RNG IS: " rng (first rng))
     (when-let [n (first rng)]
       (let [room (r/create-room {:name (str "My Cool Room " n)
                                  :invited #{"Gomotso" "Stha"}
                                  :game :tic-tac-toe})]
-        (swap! r/rooms assoc (:room-id room) room))))
+        (swap! r/rooms assoc (:room-id room) room)
+        (recur (rest rng)))))
+
   (def server (http/start-server dev-handler {:port 3080})))
 
 
