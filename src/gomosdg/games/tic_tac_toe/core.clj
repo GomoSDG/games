@@ -172,9 +172,9 @@
 
       (s/on-closed stream #(do
                              (announce room (str (name (:username user)) " has left the room."))
-                             (swap! (name (:users room)) dissoc (:username user))))
+                             (swap! (:users room) dissoc (:username user))))
 
-      (announce room (str (:username user) " has entered the room."))
+      (announce room (str (name (:username user)) " has entered the room."))
 
       (s/connect (bus/subscribe bus (:username user)) stream)
 
