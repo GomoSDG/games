@@ -10,6 +10,11 @@
   #'app)
 
 (defn -main [& args]
+  (try
+    (reset! gomosdg.auth.core/users (clojure.edn/read-string (slurp "users.edn")))
+    (catch Exception e
+      ))
+
   (loop [rng (range 10)]
     (println "RNG IS: " rng (first rng))
     (when-let [n (first rng)]

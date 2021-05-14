@@ -16,6 +16,8 @@
     games/routes)
   (GET "/" []
        (response/redirect "/games/rooms" :see-other))
+  (GET "/users/save" []
+       (spit "users.edn" @gomosdg.auth.core/users))
   auth/routes
   (route/resources "/"))
 
