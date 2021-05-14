@@ -153,6 +153,11 @@
         (recur (rest streams)))))
   (reset! (:started? room) false))
 
+(defn announce [room message]
+  (r/broadcast! room {:action "append"
+                      :type   :info
+                      :body   message}))
+
 (extend-type TicTacToeRoom
   Room
   (add-user! [room user]
@@ -165,7 +170,11 @@
                                            :user user})
                  stream)
 
-      (s/on-closed stream #(swap! (:users room) dissoc (:username user)))
+      (s/on-closed stream #(do
+                             (announce (:username user) " has left the room.")
+                             (swap! (:users room) dissoc (:username user))))
+
+      (announce room (str (:username user) " has entered the room."))
 
       (s/connect (bus/subscribe bus (:username user)) stream)
 
