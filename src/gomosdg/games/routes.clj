@@ -58,7 +58,7 @@
 
     (case command
       "start" (r/start! room)
-      "reset" (r/restart! room))))
+      "restart" (r/restart! room))))
 
 (defroutes routes*
   (GET "/rooms" []
