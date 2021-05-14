@@ -17,7 +17,7 @@
 
 (defmethod handle-game-exception :invalid-position
   [ex game-state msge room]
-  (println "Game State: " game-state)
+
   (r/send-to-user! room (get-in msge [:user :username])
                 (m/render-html {:action "append"
                                 :type   :danger
@@ -62,9 +62,7 @@
 (defn game-board-3 [{board-vals :board players :players turns :turns}]
   [:div.columns.is-centered.is-multiline.is-mobile {:id "game-board"}
    [:div.column.is-12
-    (println "Players: " @players)
     (when (seq @players)
-      (println "Players: " @players)
       [:div.level.is-mobile
        [:div.level-left
         [:div.level-item
@@ -72,7 +70,7 @@
           "X: " (get-in @players [:x :username])]]]
        [:div.level-item
         [:span.tag.is-light.is-info
-         "Turn: " (get-in @players [(first @turns) :username])]]
+          (get-in @players [(first @turns) :username])]]
        [:div.level-right
         [:div.level-item
          [:span.tag.is-light.is-primary
@@ -130,13 +128,10 @@
     (swap! (:board room) process-message msge @(:players room) (first @(:turns room)))
     (swap! (:turns room) reverse)
 
-    (println "Processed message. New game-state: " @(:board room))
-
     (r/broadcast! room (board->stream room))
 
     ;; check for winner
     (when-let [winner (d.ttt/get-winner @(:board room))]
-      (println "The game has been won by player: " winner)
       (r/broadcast! room (m/render-html {:action "append"
                                          :type   :info
                                          :body   (str "The game has been won by " (get-player-by-symbol room winner))}))
@@ -154,9 +149,10 @@
   (reset! (:started? room) false))
 
 (defn announce [room message]
-  (r/broadcast! room {:action "append"
-                      :type   :info
-                      :body   message}))
+  (r/broadcast! room (m/render-html
+                      {:action "append"
+                       :type   :info
+                       :body   message})))
 
 (extend-type TicTacToeRoom
   Room
@@ -187,9 +183,7 @@
     (bus/publish! (:bus room) username message))
 
   (start! [room]
-    (println "Started? " (:started? room))
     (when-not @(:started? room)
-      (println "Starting game!")
       (reset! (:players room) (pick-random-players (vals @(:users room))))
       (reset! (:board room) d.ttt/init-board)
       (reset! (:turns room) [:x :o])
