@@ -6,6 +6,7 @@
 
 (def ->color {:light   "is-light"
               :dark    "is-dark"
+              :info "is-info"
               :primary "is-primary"})
 
 (def ->text-color {:danger  "has-text-danger"

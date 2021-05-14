@@ -59,26 +59,41 @@
                                   :data-action "click->tic-tac-toe#placeSymbol"}
    val])
 
-(defn game-board-3 [board-vals]
+(defn game-board-3 [{board-vals :board players :players turns :turns}]
   [:div.columns.is-centered.is-multiline.is-mobile {:id "game-board"}
+   [:div.column.is-12
+    (println "Players: " @players)
+    (when (seq @players)
+      (println "Players: " @players)
+      [:div.level.is-mobile
+       [:div.level-left
+        [:div.level-item
+         [:span.tag.is-light.is-primary
+          "X: " (get-in @players [:x :username])]]]
+       [:div.level-item
+        [:span.tag.is-light.is-info
+         "Turn: " (get-in @players [(first @turns) :username])]]
+       [:div.level-right
+        [:div.level-item
+         [:span.tag.is-light.is-primary
+          "O: " (get-in @players [:o :username])]]]])]
    (map-indexed (fn [i val]
                   [:div.column.is-one-third.has-text-centered.p-1
                    {:style "border-style: solid; border-width: 0.5px"}
                    (ttt-cell i val)])
-                board-vals)])
+                @board-vals)])
 
-(defn board->stream [board]
+(defn board->stream [room]
   (h/html
    [:turbo-stream {:action "replace"
                    :target "game-board"}
     [:template
-     (game-board-3 board)]]))
+     (game-board-3 room)]]))
 
 (defn view
   ([] (view (repeat 9 " - ") nil))
 
-  ([{:keys [board] :as room} username]
-   (println "The room is" room)
+  ([room username]
    [:turbo-frame {:id              "tic-tac-toe"
                   :data-controller "tic-tac-toe"}
     [:section.section
@@ -91,7 +106,7 @@
        [:div#messages]]
       [:div.columns.is-centered
        [:div.column.is-3-widescreem.is-5-desktop
-        (game-board-3 @board)
+        (game-board-3 room)
         (r/options-panel-for room username)]]]]]))
 
 (defrecord TicTacToeRoom [room-id name board users players bus turns invited started?])
@@ -117,7 +132,7 @@
 
     (println "Processed message. New game-state: " @(:board room))
 
-    (r/broadcast! room (board->stream @(:board room)))
+    (r/broadcast! room (board->stream room))
 
     ;; check for winner
     (when-let [winner (d.ttt/get-winner @(:board room))]
@@ -175,7 +190,7 @@
                                          :type   :info
                                          :body   (str "The first player is: " (name (get-player-by-symbol room :x)))}))
 
-      (r/broadcast! room (board->stream @(:board room)))
+      (r/broadcast! room (board->stream room))
 
       (s/consume (partial game-loop room) (bus/subscribe (:bus room) :room))))
 
@@ -204,8 +219,8 @@
     (:room-id room))
 
   (options-panel-for [room username]
-    [:div
-     [:div.is-group
+    [:div.level.is-mobile
+     [:div.level-item
       (forms/render-form {:action (str "/games/rooms/" (:room-id room))
                           :method "post"}
                          [{:control :input
@@ -215,17 +230,18 @@
                           {:control :button
                            :type :submit
                            :value "Start"
-                           :colors [:light :primary]}])
+                           :colors [:light :primary]}])]
 
+     [:div.level-item
       (forms/render-form {:action (str "/games/rooms/" (:room-id room))
                           :method "post"}
                          [{:control :input
                            :type :hidden
                            :name "command"
-                           :value "reset"}
+                           :value "restart"}
                           {:control :button
                            :type :submit
-                           :value "Reset"
+                           :value "Restart"
                            :colors [:light :info]}])]])
 
   (get-view [room]
