@@ -16,7 +16,6 @@
       ))
 
   (loop [rng (range 10)]
-    (println "RNG IS: " rng (first rng))
     (when-let [n (first rng)]
       (let [room (r/create-room {:name (str "My Cool Room " n)
                                  :invited #{"Gomotso" "Stha"}

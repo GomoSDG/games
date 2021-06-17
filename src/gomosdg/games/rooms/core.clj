@@ -52,11 +52,5 @@
 
   (reset! (-> (vals @rooms)
                     first))
-  @rooms
-  (let [room (create-room {:name "My Cool Room 4"
-                           :invited #{"Gomotso" "Stha"}
-                           :game :tic-tac-toe})]
-    (swap! rooms assoc (:room-id room) room))
-r/rooms
   )
 
